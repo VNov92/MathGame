@@ -1,19 +1,11 @@
 package com.vunt.mathgame;
 
 import java.util.Optional;
-import javafx.animation.FadeTransition;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.PathTransition;
-import javafx.animation.Timeline;
+import java.util.Random;
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -21,23 +13,14 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.shape.CubicCurveTo;
-import javafx.scene.shape.MoveTo;
-import javafx.scene.shape.Path;
 import javafx.stage.Stage;
-
-import java.util.Random;
-import javafx.util.Duration;
 
 public class MathGame extends Application {
 
   private static final int MAX_NUMBER = 50;
-  private static final int QUESTION_COUNT = 2;
+  private static final int QUESTION_COUNT = 5;
   private static final Random random = new Random();
 
   private int correctAnswers = 0;
@@ -88,6 +71,7 @@ public class MathGame extends Application {
       // Nếu trẻ chưa chọn câu trả lời, hiển thị thông báo lỗi
       feedbackLabel.setText("Please select an answer!");
       feedbackLabel.setVisible(true);
+      playSound(Action.INCORRECT);
     } else {
       // Nếu trẻ đã chọn câu trả lời, kiểm tra đáp án và hiển thị feedback
       feedbackLabel.setVisible(true);
@@ -99,39 +83,53 @@ public class MathGame extends Application {
         feedbackLabel.setText("Correct!");
         nextButton.setDisable(false);
         checkButton.setDisable(true);
+        if (currentQuestion == QUESTION_COUNT) {
+          int score = correctAnswers * 10; // 1 câu trả lời đúng được tính 10 điểm
+          playSound(Action.WIN);
+          Alert alert = new Alert(AlertType.INFORMATION);
+          alert.setTitle("Kết quả");
+          alert.setHeaderText("Số điểm của bạn là: " + score);
+          alert.setContentText("Bạn có muốn chơi lại?");
+
+          ButtonType continueButton = new ButtonType("Tiếp tục");
+          ButtonType stopButton1 = new ButtonType("Dừng");
+
+          alert.getButtonTypes().setAll(continueButton, stopButton1);
+
+          Optional<ButtonType> result = alert.showAndWait();
+
+          if (result.isPresent()) {
+            if (result.get() == continueButton) {
+              resetGame();
+            } else if (result.get() == stopButton1) {
+              stopGame();
+            }
+          }
+        } else {
+          // Tiếp tục trò chơi với câu hỏi mới
+          playSound(Action.CORRECT);
+        }
       } else {
         feedbackLabel.setText("Incorrect!");
+        playSound(Action.INCORRECT);
       }
 
       // Hiển thị số câu trả lời đúng
       scoreLabel.setVisible(true);
       scoreLabel.setText("Score: " + correctAnswers + "/" + QUESTION_COUNT);
     }
-    if (currentQuestion == QUESTION_COUNT) {
-      int score = correctAnswers * 10; // 1 câu trả lời đúng được tính 10 điểm
-      Alert alert = new Alert(AlertType.INFORMATION);
-      alert.setTitle("Kết quả");
-      alert.setHeaderText("Số điểm của bạn là: " + score);
-      alert.setContentText("Bạn có muốn chơi lại?");
 
-      ButtonType continueButton = new ButtonType("Tiếp tục");
-      ButtonType stopButton1 = new ButtonType("Dừng");
+  }
 
-      alert.getButtonTypes().setAll(continueButton, stopButton1);
-
-      Optional<ButtonType> result = alert.showAndWait();
-
-      if (result.isPresent()) {
-        if (result.get() == continueButton) {
-          resetGame();
-        } else if (result.get() == stopButton1) {
-          stopGame();
-        }
-      }
-    } else {
-      // Tiếp tục trò chơi với câu hỏi mới
-    }
-
+  private void playSound(Action action) {
+    String soundName = switch (action) {
+      case WIN -> "chuc-mung-chien-thang";
+      case CORRECT -> "dung-roi-ban-gioi-qua";
+      default -> "tra-loi-sai";
+    };
+    SoundPlayer player = new SoundPlayer(
+        "src/main/resources/com/vunt/mathgame/static/audio/" + soundName + ".wav");
+    player.play();
   }
 
   private void resetGame() {
@@ -178,6 +176,7 @@ public class MathGame extends Application {
       }
     }
   }
+
   private void createUI() {
     questionLabel = new Label();
     questionLabel.setId("question-label");
@@ -201,7 +200,6 @@ public class MathGame extends Application {
     HBox answerBox = new HBox(20);
     answerBox.getChildren().addAll(answerButtons);
     answerBox.setAlignment(Pos.CENTER);
-
 
     nextButton = new Button("Next");
     nextButton.setOnAction(event -> nextQuestion());
@@ -245,14 +243,14 @@ public class MathGame extends Application {
     root.setId("root");
   }
 
-  private void initializeQuestions(){
+  private void initializeQuestions() {
     for (int i = 0; i < QUESTION_COUNT; i++) {
       int a = random.nextInt(MAX_NUMBER + 1);
       int b = random.nextInt(MAX_NUMBER + 1);
       int sum;
-      if(a>=b){
+      if (a >= b) {
         sum = random.nextBoolean() ? a + b : a - b;
-      }else{
+      } else {
         sum = a + b;
       }
       questions[i] = new MathQuestion(a, b, sum);
@@ -264,6 +262,7 @@ public class MathGame extends Application {
       answerButton.setDisable(!enabled);
     }
   }
+
   private void clearToggleGroup() {
     answerGroup.selectToggle(null);
   }
@@ -283,11 +282,11 @@ public class MathGame extends Application {
   private record MathQuestion(int a, int b, int sum) {
 
     public int getAnswer() {
-        return sum;
-      }
-
-      public String getQuestion() {
-        return a + (sum >= a ? " + " : " - ") + b + " = ?";
-      }
+      return sum;
     }
+
+    public String getQuestion() {
+      return a + (sum >= a ? " + " : " - ") + b + " = ?";
+    }
+  }
 }
