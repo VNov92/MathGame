@@ -1,4 +1,31 @@
+
+*{
+  -fx-text-fill: white;
+}
+#root{
+  -fx-background-color: #2596be;
+  -fx-font-family: ".VnAvant";
+  -fx-font-size: 16px;
+  -fx-font-weight: bold;
+}
 #question-label{
-  -fx-top: 0;
-  -fx-font-size: 20px;
+  -fx-font-size: 24px;
+  -fx-label-padding: 16px;
+}
+.answer-button{
+  -fx-border-color: #96be25;
+  -fx-padding: 10px;
+}
+#stop-button{
+  -fx-background-color: #be2596;
+}
+.answer-button, Button{
+  -fx-cursor: hand;
+}
+#check-button, #next-button{
+  -fx-background-color: #96be25;
+}
+#feedback-label{
+  -fx-font-size: 2em;
+
 }

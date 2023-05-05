@@ -1,9 +1,19 @@
 package com.vunt.mathgame;
 
 import java.util.Optional;
+import javafx.animation.FadeTransition;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.PathTransition;
+import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -11,12 +21,18 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.CubicCurveTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
 import javafx.stage.Stage;
 
 import java.util.Random;
+import javafx.util.Duration;
 
 public class MathGame extends Application {
 
@@ -30,6 +46,7 @@ public class MathGame extends Application {
 
   private Label questionLabel, scoreLabel, feedbackLabel;
   private RadioButton[] answerButtons;
+  @FXML
   private Button checkButton, nextButton, stopButton;
   private ToggleGroup answerGroup;
   private VBox root;
@@ -43,6 +60,7 @@ public class MathGame extends Application {
     primaryStage.setTitle("Math Game");
     createMathGame();
     Scene scene = new Scene(root, 400, 300);
+
     scene.getStylesheets().add("com/vunt/mathgame/static/css/file.css");
     primaryStage.setScene(scene);
     primaryStage.show();
@@ -63,6 +81,7 @@ public class MathGame extends Application {
     }
   }
 
+  @FXML
   private void checkAnswer() {
     int selectedAnswer = getSelectedAnswer();
     if (selectedAnswer == -1) {
@@ -78,13 +97,14 @@ public class MathGame extends Application {
         currentQuestion++;
         correctAnswers++;
         feedbackLabel.setText("Correct!");
-        nextButton.setVisible(true);
-        checkButton.setVisible(false);
+        nextButton.setDisable(false);
+        checkButton.setDisable(true);
       } else {
         feedbackLabel.setText("Incorrect!");
       }
 
       // Hiển thị số câu trả lời đúng
+      scoreLabel.setVisible(true);
       scoreLabel.setText("Score: " + correctAnswers + "/" + QUESTION_COUNT);
     }
     if (currentQuestion == QUESTION_COUNT) {
@@ -117,6 +137,7 @@ public class MathGame extends Application {
   private void resetGame() {
     currentQuestion = 0;
     correctAnswers = 0;
+    scoreLabel.setVisible(false);
     initializeQuestions();
     nextQuestion();
   }
@@ -131,6 +152,7 @@ public class MathGame extends Application {
     return -1;
   }
 
+  @FXML
   private void nextQuestion() {
     // Ẩn feedback và xóa lựa chọn trên giao diện
     feedbackLabel.setVisible(false);
@@ -138,8 +160,8 @@ public class MathGame extends Application {
     toggleAnswerButtons(true);
     clearAnswerButtons();
     // Ẩn nút nextQuestion và hiển thị nút checkAnswer
-    nextButton.setVisible(false);
-    checkButton.setVisible(true);
+    nextButton.setDisable(true);
+    checkButton.setDisable(false);
 
     // Tạo câu hỏi mới và hiển thị lên giao diện
     MathQuestion question = questions[currentQuestion];
@@ -160,49 +182,67 @@ public class MathGame extends Application {
     questionLabel = new Label();
     questionLabel.setId("question-label");
     scoreLabel = new Label();
+    scoreLabel.setId("score-label");
     feedbackLabel = new Label();
+    feedbackLabel.setId("feedback-label");
     answerButtons = new RadioButton[4];
     answerGroup = new ToggleGroup();
 
     for (int i = 0; i < 4; i++) {
       answerButtons[i] = new RadioButton();
       answerButtons[i].setToggleGroup(answerGroup);
+      answerButtons[i].getStyleClass().add("answer-button");
     }
+
+    HBox labelBox = new HBox();
+    labelBox.getChildren().add(questionLabel);
+    labelBox.setAlignment(Pos.CENTER);
 
     HBox answerBox = new HBox(20);
     answerBox.getChildren().addAll(answerButtons);
-    answerBox.setSpacing(10);
     answerBox.setAlignment(Pos.CENTER);
-
-    BorderPane borderPane = new BorderPane();
-    borderPane.setCenter(questionLabel);
-    borderPane.setRight(feedbackLabel);
-    borderPane.setBottom(answerBox);
 
 
     nextButton = new Button("Next");
     nextButton.setOnAction(event -> nextQuestion());
     // Ẩn nút nextQuestion ban đầu
-    nextButton.setVisible(false);
+    nextButton.setDisable(true);
+    nextButton.setId("next-button");
 
     stopButton = new Button("Stop");
     stopButton.setOnAction(event -> stopGame());
+    stopButton.setId("stop-button");
 
     // Tạo nút checkAnswer và đặt sự kiện khi nhấn
     checkButton = new Button("Check Answer");
     checkButton.setOnAction(event -> checkAnswer());
-    checkButton.setVisible(true);
+    checkButton.setDisable(false);
+    checkButton.setId("check-button");
+    HBox checkButtonBox = new HBox();
+    checkButtonBox.getChildren().add(checkButton);
+    checkButtonBox.setAlignment(Pos.CENTER);
 
-    HBox buttonBox = new HBox(10,checkButton, nextButton, stopButton);
-    buttonBox.setAlignment(Pos.CENTER);
+    HBox labelScore = new HBox();
+    labelScore.getChildren().add(scoreLabel);
+    labelScore.setAlignment(Pos.CENTER);
+
+    HBox labelFeedback = new HBox();
+    labelFeedback.getChildren().add(feedbackLabel);
+    labelFeedback.setAlignment(Pos.CENTER);
+
+    HBox buttonBox = new HBox(10, nextButton, stopButton);
+    buttonBox.setAlignment(Pos.BOTTOM_CENTER);
 
     root = new VBox(
         10,
-        borderPane,
-        buttonBox,
-        scoreLabel
+        labelBox,
+        answerBox,
+        labelFeedback,
+        checkButtonBox,
+        labelScore,
+        buttonBox
     );
-    root.setAlignment(Pos.CENTER);
+    root.setId("root");
   }
 
   private void initializeQuestions(){
@@ -235,7 +275,7 @@ public class MathGame extends Application {
     }
   }
 
-
+  @FXML
   private void stopGame() {
     System.exit(0);
   }
