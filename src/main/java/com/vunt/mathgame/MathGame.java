@@ -69,7 +69,7 @@ public class MathGame extends Application {
     int selectedAnswer = getSelectedAnswer();
     if (selectedAnswer == -1) {
       // Nếu trẻ chưa chọn câu trả lời, hiển thị thông báo lỗi
-      feedbackLabel.setText("Please select an answer!");
+      feedbackLabel.setText("Chọn câu trả lời!");
       feedbackLabel.setVisible(true);
       playSound(Action.INCORRECT);
     } else {
@@ -80,7 +80,7 @@ public class MathGame extends Application {
       if (selectedAnswer == question.getAnswer()) {
         currentQuestion++;
         correctAnswers++;
-        feedbackLabel.setText("Correct!");
+        feedbackLabel.setText("Chính xác!");
         nextButton.setDisable(false);
         checkButton.setDisable(true);
         if (currentQuestion == QUESTION_COUNT) {
@@ -110,13 +110,13 @@ public class MathGame extends Application {
           playSound(Action.CORRECT);
         }
       } else {
-        feedbackLabel.setText("Incorrect!");
+        feedbackLabel.setText("Sai rồi!");
         playSound(Action.INCORRECT);
       }
 
       // Hiển thị số câu trả lời đúng
       scoreLabel.setVisible(true);
-      scoreLabel.setText("Score: " + correctAnswers + "/" + QUESTION_COUNT);
+      scoreLabel.setText("Điểm: " + correctAnswers + "/" + QUESTION_COUNT);
     }
 
   }
@@ -201,18 +201,18 @@ public class MathGame extends Application {
     answerBox.getChildren().addAll(answerButtons);
     answerBox.setAlignment(Pos.CENTER);
 
-    nextButton = new Button("Next");
+    nextButton = new Button("Tiếp");
     nextButton.setOnAction(event -> nextQuestion());
     // Ẩn nút nextQuestion ban đầu
     nextButton.setDisable(true);
     nextButton.setId("next-button");
 
-    stopButton = new Button("Stop");
+    stopButton = new Button("Dừng");
     stopButton.setOnAction(event -> stopGame());
     stopButton.setId("stop-button");
 
     // Tạo nút checkAnswer và đặt sự kiện khi nhấn
-    checkButton = new Button("Check Answer");
+    checkButton = new Button("Kiểm tra");
     checkButton.setOnAction(event -> checkAnswer());
     checkButton.setDisable(false);
     checkButton.setId("check-button");
